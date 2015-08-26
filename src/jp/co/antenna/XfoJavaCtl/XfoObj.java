@@ -68,6 +68,20 @@ public class XfoObj {
     
     // Methods
 
+    private void debugCommand (ArrayList<String> s) {
+	PrintWriter out = null;
+
+	try {
+	    out = new PrintWriter("/tmp/alt-java-debug.txt");
+	    for (int i = 0;  i < s.size();  i++) {
+		out.println(s.get(i));
+	    }
+	    out.close();
+	} catch (FileNotFoundException e) {
+
+	}
+    }
+
     /* assumes keys are of type AHFxxx_HOME where 'x's are integers */
     int parseFormatterVersionFromKey (String key) {
 	String sub = key.substring(3, key.length() - "_HOME".length());
@@ -199,7 +213,9 @@ public class XfoObj {
         int exitCode = -1;
         try {
 			String[] s = new String[0];
-            process = this.r.exec(cmdArray.toArray(s));
+			process = this.r.exec(cmdArray.toArray(s));
+			debugCommand(cmdArray);
+
 			try {
 				InputStream StdErr = process.getErrorStream();
 				errorParser = new ErrorParser(StdErr, this.messageListener);
@@ -287,6 +303,7 @@ public class XfoObj {
 		try {
 			String[] s = new String[0];
 			process = this.r.exec(cmdArray.toArray(s));
+			debugCommand(cmdArray);
 			try {
 				InputStream StdErr = process.getErrorStream();
 				errorParser = new ErrorParser(StdErr, this.messageListener);
