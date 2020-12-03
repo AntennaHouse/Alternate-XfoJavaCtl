@@ -861,7 +861,6 @@ public class XfoObj {
 	} else {
 	    cmdArray.add("@PDF");
 	}
-	cmdArray.add(outDevice);
 
 	ProcessBuilder pb;
 	ErrorParser errorParser = null;
