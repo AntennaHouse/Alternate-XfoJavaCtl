@@ -877,50 +877,14 @@ public class XfoObj {
 		    // environment variables have already been set by using 'specifiedFormatterInstallation' or finding default unix Formatter installation
 		    String[] e = new String[envp.size()];
 		    envp.toArray(e);
-		    //FIXME processbuilder
 
-		    // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/8
-		    if (this.workingDir != null) {
-			process = this.r.exec(cmdArray.toArray(s), e, this.workingDir);
-		    } else {
-			process = this.r.exec(cmdArray.toArray(s), e);
-		    }
+		    pb = initProcessBuilder(cmdArray.toArray(s), e);
 		} else {
-		    //process = this.r.exec(cmdArray.toArray(s));
-		    pb = new ProcessBuilder(cmdArray.toArray(s));
-		    // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/8
-		    if (this.workingDir != null) {
-			pb.directory(workingDir);
-		    }
-		    Map<String, String> env = pb.environment();
 
-		    if (preferredHome != null) {
-			if (isWindows) {
-			    String path = env.get("Path");
-
-			    if (path == null) {
-				path = "";
-			    }
-			    env.put("Path", axf_home + ";" + path);
-			} else if (os.equals("Mac OS X")) {
-			    String ldpath = env.get("DYLD_LIBRARY_PATH");
-
-			    if (ldpath == null) {
-				ldpath = "";
-			    }
-			    env.put("DYLD_LIBRARY_PATH", axf_home + "/lib:" + ldpath);
-			} else {
-			    String ldpath = env.get("LD_LIBRARY_PATH");
-
-			    if (ldpath == null) {
-				ldpath = "";
-			    }
-			    env.put("LD_LIBRARY_PATH", axf_home + "/lib:" + ldpath);
-			}
-		    }
-
-		    process = pb.start();
+		    pb = initProcessBuilder(cmdArray.toArray(s), new String[0]);
 		}
+
+		process = pb.start();
 	    } catch (IOException ioex) {
 		String msg = "render() couldn't invoke axfo: " + ioex.getMessage();
 		System.err.println(msg);
