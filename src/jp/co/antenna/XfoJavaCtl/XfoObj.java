@@ -658,8 +658,6 @@ public class XfoObj {
             cmdArray.add(css);
         }
 
-        // Run Formatter with Runtime.exec()
-        //Process process;
         ProcessBuilder pb;
         ErrorParser errorParser = null;
         StreamFlusher outputFlush = null;
@@ -864,7 +862,6 @@ public class XfoObj {
     }
     cmdArray.add(outDevice);
 
-    //Process process;
     ProcessBuilder pb;
     ErrorParser errorParser = null;
     StreamCopyThread scInput = null;
@@ -928,6 +925,7 @@ public class XfoObj {
         System.err.println(msg);
         throw new XfoException(4, 0, msg);
         }
+
         try {
         InputStream StdErr = process.getErrorStream();
         errorParser = new ErrorParser(StdErr, this.messageListener);
