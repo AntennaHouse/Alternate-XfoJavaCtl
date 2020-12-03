@@ -290,153 +290,153 @@ public class XfoObj {
 
             //System.out.println("file: " + f.getName());
             if (name.startsWith(dirNamePattern)) {
-            // stop here and do next iteration if current AHF dir
-            // is not equal with the provided checkBaseDir
-            if(checkBaseDir != null && !f.getAbsolutePath().equals(checkBaseDir)) {
-                continue;
-            }
+		// stop here and do next iteration if current AHF dir
+		// is not equal with the provided checkBaseDir
+		if (checkBaseDir != null && !f.getAbsolutePath().equals(checkBaseDir)) {
+		    continue;
+		}
 
-            String versionString;
-            int version = 0;
+		String versionString;
+		int version = 0;
 
-        //System.out.println("checking...");
-        if (name.endsWith("_64")) {
-            bit64 = true;
-            versionString = name.substring(dirNamePattern.length(), name.length() - 3);
-        } else {
-            versionString = name.substring(dirNamePattern.length());
-        }
+		//System.out.println("checking...");
+		if (name.endsWith("_64")) {
+		    bit64 = true;
+		    versionString = name.substring(dirNamePattern.length(), name.length() - 3);
+		} else {
+		    versionString = name.substring(dirNamePattern.length());
+		}
 
-        //System.out.println("version string: " + versionString);
-        try {
-            version = Integer.parseInt(versionString);
-        } catch (NumberFormatException e) {
-            // pass, leave at zero
-        }
+		//System.out.println("version string: " + versionString);
+		try {
+		    version = Integer.parseInt(versionString);
+		} catch (NumberFormatException e) {
+		    // pass, leave at zero
+		}
 
-        if (version > foundVersion) {
-            foundVersion = version;
-            foundDir = f;
-            foundDirIs64Bit = bit64;
-        } else if (version == foundVersion  &&  bit64) {
-            // preference for 64 bit versions
-            foundDir = f;
-            foundDirIs64Bit = bit64;
-        }
-        }
-    }  // end f : fileList
+		if (version > foundVersion) {
+		    foundVersion = version;
+		    foundDir = f;
+		    foundDirIs64Bit = bit64;
+		} else if (version == foundVersion  &&  bit64) {
+		    // preference for 64 bit versions
+		    foundDir = f;
+		    foundDirIs64Bit = bit64;
+		}
+	    }
+	}  // end f : fileList
 
-    //FIXME not here?
-    if (foundDir != null) {
-        // also setup environment variables
+	//FIXME not here?
+	if (foundDir != null) {
+	    // also setup environment variables
 
-        //FIXME clone environment and add?
+	    //FIXME clone environment and add?
 
-        String absPath = foundDir.getAbsolutePath();
+	    String absPath = foundDir.getAbsolutePath();
 
-        String ldLibPath = "LD_LIBRARY_PATH=" + absPath + "/lib";
-        Map<String, String> osEnv = System.getenv();
-        if (osEnv.containsKey("LD_LIBRARY_PATH")) {
-        ldLibPath += ":" + osEnv.get("LD_LIBRARY_PATH");
-        }
-        envp.add(ldLibPath);
+	    String ldLibPath = "LD_LIBRARY_PATH=" + absPath + "/lib";
+	    Map<String, String> osEnv = System.getenv();
+	    if (osEnv.containsKey("LD_LIBRARY_PATH")) {
+		ldLibPath += ":" + osEnv.get("LD_LIBRARY_PATH");
+	    }
+	    envp.add(ldLibPath);
 
-        // for mac os x
-        ldLibPath = "DYLD_LIBRARY_PATH=" + absPath + "/lib";
-        if (osEnv.containsKey("DYLD_LIBRARY_PATH")) {
-        ldLibPath += ":" + osEnv.get("DYLD_LIBRARY_PATH");
-        }
-        envp.add(ldLibPath);
+	    // for mac os x
+	    ldLibPath = "DYLD_LIBRARY_PATH=" + absPath + "/lib";
+	    if (osEnv.containsKey("DYLD_LIBRARY_PATH")) {
+		ldLibPath += ":" + osEnv.get("DYLD_LIBRARY_PATH");
+	    }
+	    envp.add(ldLibPath);
 
-        envStart = "AHF" + foundVersion;
+	    envStart = "AHF" + foundVersion;
 
-        // Mac OS X versions since 6.4 are 64-bit.  The directory is still
-        // named like the 32-bit version (missing '_64', ex:
-        // /usr/local/AHFormater64) but the environment variables use the
-        // '_64' extension (ex:  AHF64_64_HOME).
-        if (foundDirIs64Bit  ||  (os.contains("Mac OS X") &&  foundVersion >= 64)) {
-        envStart += "_64";
-        }
+	    // Mac OS X versions since 6.4 are 64-bit.  The directory is still
+	    // named like the 32-bit version (missing '_64', ex:
+	    // /usr/local/AHFormater64) but the environment variables use the
+	    // '_64' extension (ex:  AHF64_64_HOME).
+	    if (foundDirIs64Bit  ||  (os.contains("Mac OS X") &&  foundVersion >= 64)) {
+		envStart += "_64";
+	    }
 
-        envp.add(envStart + "_HOME" + "=" + absPath);
-        envp.add(envStart + "_LIC_PATH" + "=" + absPath + "/etc");
-        envp.add(envStart + "_HYPDIC_PATH" + "=" + absPath + "/etc/hyphenation");
-        // DMC_TBLPATH removed since version 7, harmless to add
-        envp.add(envStart + "_DMC_TBLPATH" + "=" + absPath + "/sdata/base2");
-        envp.add(envStart + "_DEFAULT_HTML_CSS" + "=" + absPath + "/etc/html.css");
-        envp.add(envStart + "_FONT_CONFIGFILE" + "=" + absPath + "/etc/font-config.xml");
-        envp.add(envStart + "_BROKENIMG" + "=" + absPath + "/samples/Broken.png");
+	    envp.add(envStart + "_HOME" + "=" + absPath);
+	    envp.add(envStart + "_LIC_PATH" + "=" + absPath + "/etc");
+	    envp.add(envStart + "_HYPDIC_PATH" + "=" + absPath + "/etc/hyphenation");
+	    // DMC_TBLPATH removed since version 7, harmless to add
+	    envp.add(envStart + "_DMC_TBLPATH" + "=" + absPath + "/sdata/base2");
+	    envp.add(envStart + "_DEFAULT_HTML_CSS" + "=" + absPath + "/etc/html.css");
+	    envp.add(envStart + "_FONT_CONFIGFILE" + "=" + absPath + "/etc/font-config.xml");
+	    envp.add(envStart + "_BROKENIMG" + "=" + absPath + "/samples/Broken.png");
 
-        /*
-        for (String s : envp) {
-        System.out.println("env: " + s);
-        }
-        */
-    }
+	    /*
+	    for (String s : envp) {
+	        System.out.println("env: " + s);
+	    }
+	    */
+	}
 
-    return foundDir;
+	return foundDir;
     }
 
     private void setCustomFormatterLocationEnvironmentVariables () throws XfoException {
-    //FIXME Windows
+	//FIXME Windows
 
-    String absPath = specifiedFormatterInstallation;
-    Map<String, String> osEnv = System.getenv();
+	String absPath = specifiedFormatterInstallation;
+	Map<String, String> osEnv = System.getenv();
 
-    if (isWindows) {
-        String path = "Path=" + absPath;
-        if (osEnv.containsKey("Path")) {
-        path += ";" + osEnv.get("Path");  //FIXME File.pathSeparator
-        }
-        envp.add(path);
-    } else {
-        String ldLibPath = "LD_LIBRARY_PATH=" + absPath + "/lib";
+	if (isWindows) {
+	    String path = "Path=" + absPath;
+	    if (osEnv.containsKey("Path")) {
+		path += ";" + osEnv.get("Path");  //FIXME File.pathSeparator
+	    }
+	    envp.add(path);
+	} else {
+	    String ldLibPath = "LD_LIBRARY_PATH=" + absPath + "/lib";
 
-        if (osEnv.containsKey("LD_LIBRARY_PATH")) {
-        ldLibPath += ":" + osEnv.get("LD_LIBRARY_PATH");
-        }
-        envp.add(ldLibPath);
+	    if (osEnv.containsKey("LD_LIBRARY_PATH")) {
+		ldLibPath += ":" + osEnv.get("LD_LIBRARY_PATH");
+	    }
+	    envp.add(ldLibPath);
 
-        // for mac os x
-        ldLibPath = "DYLD_LIBRARY_PATH=" + absPath + "/lib";
-        if (osEnv.containsKey("DYLD_LIBRARY_PATH")) {
-        ldLibPath += ":" + osEnv.get("DYLD_LIBRARY_PATH");
-        }
-        envp.add(ldLibPath);
-    }
+	    // for mac os x
+	    ldLibPath = "DYLD_LIBRARY_PATH=" + absPath + "/lib";
+	    if (osEnv.containsKey("DYLD_LIBRARY_PATH")) {
+		ldLibPath += ":" + osEnv.get("DYLD_LIBRARY_PATH");
+	    }
+	    envp.add(ldLibPath);
+	}
 
-    // needs to be *_HOME
+	// needs to be *_HOME
 
-    if (preferredHome == null) {
-        //FIXME Windows
-        File f = checkForLatestUnixFormatterDirectory(os, specifiedFormatterInstallation);
-        if (f == null) {
-        throw new XfoException(4, 0, "Formatter version couldn't be determined from specified installation");
-        }
+	if (preferredHome == null) {
+	    //FIXME Windows
+	    File f = checkForLatestUnixFormatterDirectory(os, specifiedFormatterInstallation);
+	    if (f == null) {
+		throw new XfoException(4, 0, "Formatter version couldn't be determined from specified installation");
+	    }
 
-        // environment variables set in checkFor...() call
-        return;
-    }
+	    // environment variables set in checkFor...() call
+	    return;
+	}
 
-    if (preferredHome.length() < 6) {
-        throw new XfoException(4, 0, "invalid 'preferredHome' specified");
-    }
+	if (preferredHome.length() < 6) {
+	    throw new XfoException(4, 0, "invalid 'preferredHome' specified");
+	}
 
-    String etcDir = File.separator + "etc";
-    if (isWindows) {
-        etcDir = "";
-    }
+	String etcDir = File.separator + "etc";
+	if (isWindows) {
+	    etcDir = "";
+	}
 
-    envStart = preferredHome.substring(0, preferredHome.length() - 5);
+	envStart = preferredHome.substring(0, preferredHome.length() - 5);
 
-    envp.add(envStart + "_HOME" + "=" + absPath);
-    envp.add(envStart + "_LIC_PATH" + "=" + absPath + etcDir);
-    envp.add(envStart + "_HYPDIC_PATH" + "=" + absPath + etcDir + File.separator + "hyphenation");
-    // DMC_TBLPATH removed since version 7, harmless to add
-    envp.add(envStart + "_DMC_TBLPATH" + "=" + absPath + File.separator + "sdata" + File.separator + "base2");
-    envp.add(envStart + "_DEFAULT_HTML_CSS" + "=" + absPath + etcDir + File.separator + "html.css");
-    envp.add(envStart + "_FONT_CONFIGFILE" + "=" + absPath + etcDir + File.separator + "font-config.xml");
-    envp.add(envStart + "_BROKENIMG" + "=" + absPath + File.separator + "samples" + File.separator + "Broken.png");
+	envp.add(envStart + "_HOME" + "=" + absPath);
+	envp.add(envStart + "_LIC_PATH" + "=" + absPath + etcDir);
+	envp.add(envStart + "_HYPDIC_PATH" + "=" + absPath + etcDir + File.separator + "hyphenation");
+	// DMC_TBLPATH removed since version 7, harmless to add
+	envp.add(envStart + "_DMC_TBLPATH" + "=" + absPath + File.separator + "sdata" + File.separator + "base2");
+	envp.add(envStart + "_DEFAULT_HTML_CSS" + "=" + absPath + etcDir + File.separator + "html.css");
+	envp.add(envStart + "_FONT_CONFIGFILE" + "=" + absPath + etcDir + File.separator + "font-config.xml");
+	envp.add(envStart + "_BROKENIMG" + "=" + absPath + File.separator + "samples" + File.separator + "Broken.png");
     }
 
     /**
@@ -466,125 +466,125 @@ public class XfoObj {
      */
     public XfoObj (String preferredHome, String specifiedFormatterInstallation) throws XfoException {
         // Check EVs and test if XslCmd.exe exists.
-    this.preferredHome = preferredHome;
-    this.specifiedFormatterInstallation = specifiedFormatterInstallation;
-    try {
-        os = System.getProperty("os.name");
-        if ((os == null) || os.equals("")) {
-            throw new Exception();
-        }
-        isWindows = os.contains("Windows");
-    } catch (Exception e) {
-        throw new XfoException(4, 0, "Could not determine OS");
-    }
+	this.preferredHome = preferredHome;
+	this.specifiedFormatterInstallation = specifiedFormatterInstallation;
+	try {
+	    os = System.getProperty("os.name");
+	    if ((os == null) || os.equals("")) {
+		throw new Exception();
+	    }
+	    isWindows = os.contains("Windows");
+	} catch (Exception e) {
+	    throw new XfoException(4, 0, "Could not determine OS");
+	}
 
-    // ahrts
-    axf_home = System.getProperty("axf.home");
-    int axf_ver = 1;
+	// ahrts
+	axf_home = System.getProperty("axf.home");
+	int axf_ver = 1;
 
-    Map<String, String> env = System.getenv();
+	Map<String, String> env = System.getenv();
 
-    if ((axf_home == null) || axf_home.equals("")) {
-        try {
-        if (preferredHome != null  &&  specifiedFormatterInstallation == null) {
-            if (env.containsKey(preferredHome)) {
-            axf_home = env.get(preferredHome);
-            }
-            // else fall back to other checks
-        } else if (specifiedFormatterInstallation != null) {
-            //System.out.println("specified: " + specifiedFormatterInstallation);
-            axf_home = specifiedFormatterInstallation;
-            setCustomFormatterLocationEnvironmentVariables();
-        }
+	if ((axf_home == null) || axf_home.equals("")) {
+	    try {
+		if (preferredHome != null  &&  specifiedFormatterInstallation == null) {
+		    if (env.containsKey(preferredHome)) {
+			axf_home = env.get(preferredHome);
+		    }
+		    // else fall back to other checks
+		} else if (specifiedFormatterInstallation != null) {
+		    //System.out.println("specified: " + specifiedFormatterInstallation);
+		    axf_home = specifiedFormatterInstallation;
+		    setCustomFormatterLocationEnvironmentVariables();
+		}
 
-        if (axf_home == null  ||  axf_home.equals("")) {
-            for (String key: AH_HOME_ENV) {
-            if (env.containsKey(key)) {
-                axf_home = env.get(key);
-                if (AH_VER_MAP.containsKey(key)) {
-                axf_ver = AH_VER_MAP.get(key).intValue();
-                }
-                break;
-            }
-            }
-        }
+		if (axf_home == null  ||  axf_home.equals("")) {
+		    for (String key: AH_HOME_ENV) {
+			if (env.containsKey(key)) {
+			    axf_home = env.get(key);
+			    if (AH_VER_MAP.containsKey(key)) {
+				axf_ver = AH_VER_MAP.get(key).intValue();
+			    }
+			    break;
+			}
+		    }
+		}
 
-        // check possible future versions of Formatter
-        if (axf_home == null  ||  axf_home.equals("")) {
-            String foundKey = "";
-            int foundVersion = 0;
+		// check possible future versions of Formatter
+		if (axf_home == null  ||  axf_home.equals("")) {
+		    String foundKey = "";
+		    int foundVersion = 0;
 
-            //List<String> foundKeys = new List<String>();
+		    //List<String> foundKeys = new List<String>();
 
-            for (String key: env.keySet()) {
-            String ukey;
-            if (isWindows) {
-                ukey = key.toUpperCase();
-            } else {
-                ukey = key;
-            }
+		    for (String key: env.keySet()) {
+			String ukey;
+			if (isWindows) {
+			    ukey = key.toUpperCase();
+			} else {
+			    ukey = key;
+			}
 
-            if (ukey.startsWith("AHF")  &&  ukey.endsWith("_HOME")) {
-                int version = parseFormatterVersionFromKey(ukey);
-                if (version > foundVersion) {
-                foundVersion = version;
-                foundKey = ukey;
-                }
-            }
-            } // end for (String key: ...
+			if (ukey.startsWith("AHF")  &&  ukey.endsWith("_HOME")) {
+			    int version = parseFormatterVersionFromKey(ukey);
+			    if (version > foundVersion) {
+				foundVersion = version;
+				foundKey = ukey;
+			    }
+			}
+		    } // end for (String key: ...
 
-            if (!foundKey.equals("")) {
-            axf_home = env.get(foundKey);
-            }
-        }
+		    if (!foundKey.equals("")) {
+			axf_home = env.get(foundKey);
+		    }
+		}
 
-        // check some default unix paths
-        if ((axf_home == null) || axf_home.equals("")) {
-            File foundDir = checkForLatestUnixFormatterDirectory(os, null);
-            if (foundDir != null) {
-            axf_home = foundDir.getAbsolutePath();
-            }
-        }
+		// check some default unix paths
+		if ((axf_home == null) || axf_home.equals("")) {
+		    File foundDir = checkForLatestUnixFormatterDirectory(os, null);
+		    if (foundDir != null) {
+			axf_home = foundDir.getAbsolutePath();
+		    }
+		}
 
-        if ((axf_home == null) || axf_home.equals(""))
-            throw new Exception("axf home is unset");
-        } catch (XfoException e) {
-        throw e;
-        } catch (Exception e) {
-        throw new XfoException(4, 1, "Could not locate Formatter's environment variables");
-        }
-    } else {  // axf.home was specified
-        // ahrts
-        String axf_version = System.getProperty("axf.version");
-        if (axf_version != null  &&  !axf_home.equals("")) {
-        this.specifiedFormatterInstallation = axf_home;
-        this.preferredHome = axf_version;
-        setCustomFormatterLocationEnvironmentVariables();
-        }
-    }
+		if ((axf_home == null) || axf_home.equals(""))
+		    throw new Exception("axf home is unset");
+	    } catch (XfoException e) {
+		throw e;
+	    } catch (Exception e) {
+		throw new XfoException(4, 1, "Could not locate Formatter's environment variables");
+	    }
+	} else {  // axf.home was specified
+	    // ahrts
+	    String axf_version = System.getProperty("axf.version");
+	    if (axf_version != null  &&  !axf_home.equals("")) {
+		this.specifiedFormatterInstallation = axf_home;
+		this.preferredHome = axf_version;
+		setCustomFormatterLocationEnvironmentVariables();
+	    }
+	}
 
-    String separator = System.getProperty("file.separator");
-    this.executable = axf_home + separator;
-    if (System.getProperty("axf.bin") == null) {
-        if (os.equals("Linux") || os.equals("SunOS") || os.equals("AIX") || os.equals("Mac OS X")) {
-        if (axf_ver == 0) {
-            this.executable += "bin" + separator + "XSLCmd";
-        } else {
-            this.executable += "bin" + separator + "AHFCmd";
-        }
-        }
-        else if (os.contains("Windows")) {
-        if (axf_ver == 0)
-            this.executable += "XSLCmd.exe";
-        else
-            this.executable += "AHFCmd.exe";
-        }
-        else
-        throw new XfoException(4, 2, "Unsupported OS: " + os);
-    }
-    else {
-        this.executable += System.getProperty("axf.bin");
-    }
+	String separator = System.getProperty("file.separator");
+	this.executable = axf_home + separator;
+	if (System.getProperty("axf.bin") == null) {
+	    if (os.equals("Linux") || os.equals("SunOS") || os.equals("AIX") || os.equals("Mac OS X")) {
+		if (axf_ver == 0) {
+		    this.executable += "bin" + separator + "XSLCmd";
+		} else {
+		    this.executable += "bin" + separator + "AHFCmd";
+		}
+	    }
+	    else if (os.contains("Windows")) {
+		if (axf_ver == 0)
+		    this.executable += "XSLCmd.exe";
+		else
+		    this.executable += "AHFCmd.exe";
+	    }
+	    else
+		throw new XfoException(4, 2, "Unsupported OS: " + os);
+	}
+	else {
+	    this.executable += System.getProperty("axf.bin");
+	}
         // setup attributes
         this.clear();
     }
@@ -665,129 +665,130 @@ public class XfoObj {
         int exitCode = -1;
         try {
             String[] s = new String[0];
-        try {
-            if (envp.size() > 0) {
-                // environment variables have already been set by using 'specifiedFormatterInstallation' or finding default unix Formatter installation
-                String[] e = new String[envp.size()];
-                envp.toArray(e);
+	    try {
+		if (envp.size() > 0) {
+		    // environment variables have already been set by using 'specifiedFormatterInstallation' or finding default unix Formatter installation
+		    String[] e = new String[envp.size()];
+		    envp.toArray(e);
 
-                pb = initProcessBuilder(cmdArray.toArray(s), e);
+		    pb = initProcessBuilder(cmdArray.toArray(s), e);
 
-            } else {
+		} else {
 
-                pb = initProcessBuilder(cmdArray.toArray(s), new String[0]);
-            }
+		    pb = initProcessBuilder(cmdArray.toArray(s), new String[0]);
+		}
 
-            process = pb.start();
+		process = pb.start();
 
-        } catch (IOException ioex) {
-            processValid = false;
-            String msg = "couldn't invoke axfo: " + ioex.getMessage();
-            System.err.println(msg);
-            throw new XfoException(4, 0, msg);
-        }
-        try {
-            InputStream StdErr = process.getErrorStream();
-            InputStream StdOut = process.getInputStream();
-            errorParser = new ErrorParser(StdErr, this.messageListener);
-            errorParser.start();
-            if (useStdoutFix) {
-                outputFileFlush = new StreamCopyThread(StdOut, new FileOutputStream(new File(outputFilename)));
-                outputFileFlush.start();
-            } else {
-                outputFlush = new StreamFlusher(StdOut);
-                outputFlush.start();
-            }
-        } catch (Exception e) {
-            String msg = "Exception getting streams: " + e.getMessage();
-            System.err.println(msg);
-            throw new XfoException(4, 0, msg);
-        }
-        try {
-            exitCode = process.waitFor();
-            process = null;
-        } catch (InterruptedException e) {
-            String msg = "InterruptedException waiting for axfo to finish: " + e.getMessage();
-            System.err.println(msg);
-            //FIXME ahfcmd is still running though...
-            if (process != null) {
-                process.destroy();
-                process.waitFor();
-                process = null;
-                if (outputFlush != null) {
-                    outputFlush.interrupt();
-                    outputFlush.join();
-                //System.out.println("interrupting flush thread");
-            }
-            if (outputFileFlush != null) {
-                outputFileFlush.interrupt();
-                outputFileFlush.join();
-            }
-            if (errorParser != null) {
-                errorParser.interrupt();
-                errorParser.join();
-                //System.out.println("interrupting error parsing thread");
-            }
-            //System.out.println("killed ahfcmd process");
-        }
-        Thread.interrupted();
-        //throw new XfoException(4, 0, msg);
-        throw new InterruptedException();
-        }
-    } catch (XfoException e) {
-        // maybe set process = null here as well
-        throw e;
+	    } catch (IOException ioex) {
+		processValid = false;
+		String msg = "couldn't invoke axfo: " + ioex.getMessage();
+		System.err.println(msg);
+		throw new XfoException(4, 0, msg);
+	    }
+	    try {
+		InputStream StdErr = process.getErrorStream();
+		InputStream StdOut = process.getInputStream();
+		errorParser = new ErrorParser(StdErr, this.messageListener);
+		errorParser.start();
+		if (useStdoutFix) {
+		    outputFileFlush = new StreamCopyThread(StdOut, new FileOutputStream(new File(outputFilename)));
+		    outputFileFlush.start();
+		} else {
+		    outputFlush = new StreamFlusher(StdOut);
+		    outputFlush.start();
+		}
+	    } catch (Exception e) {
+		String msg = "Exception getting streams: " + e.getMessage();
+		System.err.println(msg);
+		throw new XfoException(4, 0, msg);
+	    }
+	    try {
+		exitCode = process.waitFor();
+		process = null;
+	    } catch (InterruptedException e) {
+		String msg = "InterruptedException waiting for axfo to finish: " + e.getMessage();
+		System.err.println(msg);
+		//FIXME ahfcmd is still running though...
+		if (process != null) {
+		    process.destroy();
+		    process.waitFor();
+		    process = null;
+		    if (outputFlush != null) {
+			outputFlush.interrupt();
+			outputFlush.join();
+			//System.out.println("interrupting flush thread");
+		    }
+		    if (outputFileFlush != null) {
+			outputFileFlush.interrupt();
+			outputFileFlush.join();
+		    }
+		    if (errorParser != null) {
+			errorParser.interrupt();
+			errorParser.join();
+			//System.out.println("interrupting error parsing thread");
+		    }
+		    //System.out.println("killed ahfcmd process");
+		}
+		Thread.interrupted();
+		//throw new XfoException(4, 0, msg);
+		throw new InterruptedException();
+	    }
+	} catch (XfoException e) {
+	    // maybe set process = null here as well
+	    throw e;
         /*
         } catch (Exception e) {
         String msg = "Exception waiting for axfo to finish: " + e.getMessage();
         System.err.println(msg);
         throw new XfoException(4, 0, msg);
         */
-    }
 
-    if (outputFileFlush != null) {
-        try {
-        outputFileFlush.join();
-        } catch (InterruptedException e) {
-        String msg = "Exception output file flush: " + e.getMessage();
-        System.err.println(msg);
-        Thread.interrupted();
-        throw new InterruptedException();
-        //throw new XfoException(4, 0, msg);
-        }
-    }
+	}
 
-    if (outputFlush != null) {
-        try {
-        outputFlush.join();
-        } catch (InterruptedException e) {
-        String msg = "Exception output flush: " + e.getMessage();
-        System.err.println(msg);
-        Thread.interrupted();
-        throw new InterruptedException();
-        //throw new XfoException(4, 0, msg);
-        }
-    }
+	if (outputFileFlush != null) {
+	    try {
+		outputFileFlush.join();
+	    } catch (InterruptedException e) {
+		String msg = "Exception output file flush: " + e.getMessage();
+		System.err.println(msg);
+		Thread.interrupted();
+		throw new InterruptedException();
+		//throw new XfoException(4, 0, msg);
+	    }
+	}
 
-    if (errorParser != null) {
-        try {
-        errorParser.join();
-        formatterMajorVersion = errorParser.majorVersion;
-        formatterMinorVersion = errorParser.minorVersion;
-        formatterRevision = errorParser.revision;
-        } catch (InterruptedException e) {
-        String msg = "Exception joining error parser: " + e.getMessage();
-        System.err.println(msg);
-        Thread.interrupted();
-        //throw new XfoException(4, 0, msg);
-        throw new InterruptedException();
-        }
-    }
+	if (outputFlush != null) {
+	    try {
+		outputFlush.join();
+	    } catch (InterruptedException e) {
+		String msg = "Exception output flush: " + e.getMessage();
+		System.err.println(msg);
+		Thread.interrupted();
+		throw new InterruptedException();
+		//throw new XfoException(4, 0, msg);
+	    }
+	}
+
+	if (errorParser != null) {
+	    try {
+		errorParser.join();
+		formatterMajorVersion = errorParser.majorVersion;
+		formatterMinorVersion = errorParser.minorVersion;
+		formatterRevision = errorParser.revision;
+	    } catch (InterruptedException e) {
+		String msg = "Exception joining error parser: " + e.getMessage();
+		System.err.println(msg);
+		Thread.interrupted();
+		//throw new XfoException(4, 0, msg);
+		throw new InterruptedException();
+	    }
+	}
 
         if (exitCode != 0) {
             if (errorParser != null && errorParser.LastErrorCode != 0) {
                 this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
-        throw this.lastError;
+		throw this.lastError;
             } else {
                 throw new XfoException(4, 0, "Axfo Exit code: " + exitCode + " last message: " + errorParser.UnknownErrorMessage);
             }
@@ -795,24 +796,24 @@ public class XfoObj {
     }
 
     public int getErrorCode () throws XfoException {
-    if (this.lastError == null)
-        return 0;
-    else
-        return this.lastError.getErrorCode();
+	if (this.lastError == null)
+	    return 0;
+	else
+	    return this.lastError.getErrorCode();
     }
 
     public int getErrorLevel () throws XfoException {
-    if (this.lastError == null)
-        return 0;
-    else
-        return this.lastError.getErrorLevel();
+	if (this.lastError == null)
+	    return 0;
+	else
+	    return this.lastError.getErrorLevel();
     }
 
     public String getErrorMessage () throws XfoException {
-    if (this.lastError == null)
-        return null;
-    else
-        return this.lastError.getErrorMessage();
+	if (this.lastError == null)
+	    return null;
+	else
+	    return this.lastError.getErrorMessage();
     }
 
     public int getExitLevel () throws XfoException {
@@ -823,7 +824,7 @@ public class XfoObj {
     }
 
     public void releaseObject () {
-    this.clear();
+	this.clear();
     }
 
     public void releaseObjectEx () throws XfoException {
@@ -839,164 +840,164 @@ public class XfoObj {
      * @throws jp.co.antenna.XfoJavaCtl.XfoException
      */
     public void render (InputStream src, OutputStream dst, String outDevice) throws XfoException, InterruptedException {
-    ArrayList<String> cmdArray = new ArrayList<String>();
-    cmdArray.add(this.executable);
-    for (String arg : this.args.keySet()) {
-        cmdArray.add(arg);
-        if (this.args.get(arg) != null)
-        cmdArray.add(this.args.get(arg));
-    }
-    for (String css : this.userCSS) {
-        cmdArray.add("-css");
-        cmdArray.add(css);
-    }
-    cmdArray.add("-d");
-    cmdArray.add("@STDIN");
-    cmdArray.add("-o");
-    cmdArray.add("@STDOUT");
-    cmdArray.add("-p");
-    if (outDevice != null  &&  outDevice.length() != 0) {
-        cmdArray.add(outDevice);
-    } else {
-        cmdArray.add("@PDF");
-    }
-    cmdArray.add(outDevice);
+	ArrayList<String> cmdArray = new ArrayList<String>();
+	cmdArray.add(this.executable);
+	for (String arg : this.args.keySet()) {
+	    cmdArray.add(arg);
+	    if (this.args.get(arg) != null)
+		cmdArray.add(this.args.get(arg));
+	}
+	for (String css : this.userCSS) {
+	    cmdArray.add("-css");
+	    cmdArray.add(css);
+	}
+	cmdArray.add("-d");
+	cmdArray.add("@STDIN");
+	cmdArray.add("-o");
+	cmdArray.add("@STDOUT");
+	cmdArray.add("-p");
+	if (outDevice != null  &&  outDevice.length() != 0) {
+	    cmdArray.add(outDevice);
+	} else {
+	    cmdArray.add("@PDF");
+	}
+	cmdArray.add(outDevice);
 
-    ProcessBuilder pb;
-    ErrorParser errorParser = null;
-    StreamCopyThread scInput = null;
-    StreamCopyThread scOutput = null;
+	ProcessBuilder pb;
+	ErrorParser errorParser = null;
+	StreamCopyThread scInput = null;
+	StreamCopyThread scOutput = null;
 
-    int exitCode = -1;
+	int exitCode = -1;
 
-    try {
-        String[] s = new String[0];
-        try {
-        if (envp.size() > 0) {
-            // environment variables have already been set by using 'specifiedFormatterInstallation' or finding default unix Formatter installation
-            String[] e = new String[envp.size()];
-            envp.toArray(e);
-            //FIXME processbuilder
+	try {
+	    String[] s = new String[0];
+	    try {
+		if (envp.size() > 0) {
+		    // environment variables have already been set by using 'specifiedFormatterInstallation' or finding default unix Formatter installation
+		    String[] e = new String[envp.size()];
+		    envp.toArray(e);
+		    //FIXME processbuilder
 
-            // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/8
-            if (this.workingDir != null) {
-            process = this.r.exec(cmdArray.toArray(s), e, this.workingDir);
-            } else {
-            process = this.r.exec(cmdArray.toArray(s), e);
-            }
-        } else {
-            //process = this.r.exec(cmdArray.toArray(s));
-            pb = new ProcessBuilder(cmdArray.toArray(s));
-            // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/8
-            if (this.workingDir != null) {
-            pb.directory(workingDir);
-            }
-            Map<String, String> env = pb.environment();
+		    // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/8
+		    if (this.workingDir != null) {
+			process = this.r.exec(cmdArray.toArray(s), e, this.workingDir);
+		    } else {
+			process = this.r.exec(cmdArray.toArray(s), e);
+		    }
+		} else {
+		    //process = this.r.exec(cmdArray.toArray(s));
+		    pb = new ProcessBuilder(cmdArray.toArray(s));
+		    // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/8
+		    if (this.workingDir != null) {
+			pb.directory(workingDir);
+		    }
+		    Map<String, String> env = pb.environment();
 
-            if (preferredHome != null) {
-            if (isWindows) {
-                String path = env.get("Path");
+		    if (preferredHome != null) {
+			if (isWindows) {
+			    String path = env.get("Path");
 
-                if (path == null) {
-                path = "";
-                }
-                env.put("Path", axf_home + ";" + path);
-            } else if (os.equals("Mac OS X")) {
-                String ldpath = env.get("DYLD_LIBRARY_PATH");
+			    if (path == null) {
+				path = "";
+			    }
+			    env.put("Path", axf_home + ";" + path);
+			} else if (os.equals("Mac OS X")) {
+			    String ldpath = env.get("DYLD_LIBRARY_PATH");
 
-                if (ldpath == null) {
-                ldpath = "";
-                }
-                env.put("DYLD_LIBRARY_PATH", axf_home + "/lib:" + ldpath);
-            } else {
-                String ldpath = env.get("LD_LIBRARY_PATH");
+			    if (ldpath == null) {
+				ldpath = "";
+			    }
+			    env.put("DYLD_LIBRARY_PATH", axf_home + "/lib:" + ldpath);
+			} else {
+			    String ldpath = env.get("LD_LIBRARY_PATH");
 
-                if (ldpath == null) {
-                ldpath = "";
-                }
-                env.put("LD_LIBRARY_PATH", axf_home + "/lib:" + ldpath);
-            }
-            }
+			    if (ldpath == null) {
+				ldpath = "";
+			    }
+			    env.put("LD_LIBRARY_PATH", axf_home + "/lib:" + ldpath);
+			}
+		    }
 
-            process = pb.start();
-        }
-        } catch (IOException ioex) {
-        String msg = "render() couldn't invoke axfo: " + ioex.getMessage();
-        System.err.println(msg);
-        throw new XfoException(4, 0, msg);
-        }
+		    process = pb.start();
+		}
+	    } catch (IOException ioex) {
+		String msg = "render() couldn't invoke axfo: " + ioex.getMessage();
+		System.err.println(msg);
+		throw new XfoException(4, 0, msg);
+	    }
 
-        try {
-        InputStream StdErr = process.getErrorStream();
-        errorParser = new ErrorParser(StdErr, this.messageListener);
-        errorParser.start();
+	    try {
+		InputStream StdErr = process.getErrorStream();
+		errorParser = new ErrorParser(StdErr, this.messageListener);
+		errorParser.start();
 
-        scInput = new StreamCopyThread(process.getInputStream(), dst);
-        scInput.start();
-        scOutput = new StreamCopyThread(src, process.getOutputStream());
-        scOutput.start();
-        } catch (Exception e) {
-        String msg = "Exception creating threads in render(): " + e.getMessage();
-        System.err.println(msg);
-        //e.printStackTrace();
-        throw new XfoException(4, 0, msg);
-        }
+		scInput = new StreamCopyThread(process.getInputStream(), dst);
+		scInput.start();
+		scOutput = new StreamCopyThread(src, process.getOutputStream());
+		scOutput.start();
+	    } catch (Exception e) {
+		String msg = "Exception creating threads in render(): " + e.getMessage();
+		System.err.println(msg);
+		//e.printStackTrace();
+		throw new XfoException(4, 0, msg);
+	    }
 
-        exitCode = process.waitFor();
-    } catch (Exception e) {
-        String msg = "Exception in render(): " + e.getMessage();
-        System.err.println(msg);
-        //e.printStackTrace();
-        throw new XfoException(4, 0, msg);
-    }
+	    exitCode = process.waitFor();
+	} catch (Exception e) {
+	    String msg = "Exception in render(): " + e.getMessage();
+	    System.err.println(msg);
+	    //e.printStackTrace();
+	    throw new XfoException(4, 0, msg);
+	}
 
-    if (scInput != null) {
-        try {
-        scInput.join();
-        } catch (InterruptedException e) {
-        String msg = "Exception joining render input: " + e.getMessage();
-        System.err.println(msg);
-        Thread.interrupted();
-        throw new InterruptedException();
-        //throw new XfoException(4, 0, msg);
-        }
-    }
+	if (scInput != null) {
+	    try {
+		scInput.join();
+	    } catch (InterruptedException e) {
+		String msg = "Exception joining render input: " + e.getMessage();
+		System.err.println(msg);
+		Thread.interrupted();
+		throw new InterruptedException();
+		//throw new XfoException(4, 0, msg);
+	    }
+	}
 
-    if (scOutput != null) {
-        try {
-        scOutput.join();
-        } catch (InterruptedException e) {
-        String msg = "Exception joining render output: " + e.getMessage();
-        System.err.println(msg);
-        Thread.interrupted();
-        throw new InterruptedException();
-        //throw new XfoException(4, 0, msg);
-        }
-    }
+	if (scOutput != null) {
+	    try {
+		scOutput.join();
+	    } catch (InterruptedException e) {
+		String msg = "Exception joining render output: " + e.getMessage();
+		System.err.println(msg);
+		Thread.interrupted();
+		throw new InterruptedException();
+		//throw new XfoException(4, 0, msg);
+	    }
+	}
 
-    if (errorParser != null) {
-        try {
-        errorParser.join();
-        formatterMajorVersion = errorParser.majorVersion;
-        formatterMinorVersion = errorParser.minorVersion;
-        formatterRevision = errorParser.revision;
-        } catch (InterruptedException e) {
-        String msg = "Exception joining error parser: " + e.getMessage();
-        System.err.println(msg);
-        Thread.interrupted();
-        throw new InterruptedException();
-        //throw new XfoException(4, 0, msg);
-        }
-    }
+	if (errorParser != null) {
+	    try {
+		errorParser.join();
+		formatterMajorVersion = errorParser.majorVersion;
+		formatterMinorVersion = errorParser.minorVersion;
+		formatterRevision = errorParser.revision;
+	    } catch (InterruptedException e) {
+		String msg = "Exception joining error parser: " + e.getMessage();
+		System.err.println(msg);
+		Thread.interrupted();
+		throw new InterruptedException();
+		//throw new XfoException(4, 0, msg);
+	    }
+	}
 
-    if (exitCode != 0) {
-        if (errorParser != null && errorParser.LastErrorCode != 0) {
-        this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
-        throw this.lastError;
-        } else {
-        throw new XfoException(4, 0, "Exit code: " + exitCode + " render 2 last message: " + errorParser.UnknownErrorMessage);
-        }
-    }
+	if (exitCode != 0) {
+	    if (errorParser != null && errorParser.LastErrorCode != 0) {
+		this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
+		throw this.lastError;
+	    } else {
+		throw new XfoException(4, 0, "Exit code: " + exitCode + " render 2 last message: " + errorParser.UnknownErrorMessage);
+	    }
+	}
     }
 
     /**
@@ -1012,18 +1013,18 @@ public class XfoObj {
      * @throws jp.co.antenna.XfoJavaCtl.XfoException
      */
     public void render(InputStream xmlSrc, InputStream xslSrc, OutputStream dst, String outDevice) throws XfoException {
-    try {
-        ByteArrayOutputStream baosFO = new ByteArrayOutputStream();
-        TransformerFactory transFactory = TransformerFactory.newInstance();
-        Transformer transformer = transFactory.newTransformer(new StreamSource(xslSrc));
-        transformer.transform(new StreamSource(xmlSrc), new StreamResult(baosFO));
-        ByteArrayInputStream baisFO = new ByteArrayInputStream(baosFO.toByteArray());
-        this.render(baisFO, dst, outDevice);
-    } catch (XfoException xfoe) {
-        throw xfoe;
-    } catch (Exception e) {
-        throw new XfoException(4, 0, "XSLT Transformation failed: " + e.toString() + " render 2");
-    }
+	try {
+	    ByteArrayOutputStream baosFO = new ByteArrayOutputStream();
+	    TransformerFactory transFactory = TransformerFactory.newInstance();
+	    Transformer transformer = transFactory.newTransformer(new StreamSource(xslSrc));
+	    transformer.transform(new StreamSource(xmlSrc), new StreamResult(baosFO));
+	    ByteArrayInputStream baisFO = new ByteArrayInputStream(baosFO.toByteArray());
+	    this.render(baisFO, dst, outDevice);
+	} catch (XfoException xfoe) {
+	    throw xfoe;
+	} catch (Exception e) {
+	    throw new XfoException(4, 0, "XSLT Transformation failed: " + e.toString() + " render 2");
+	}
     }
 
     private void versionCheck (boolean check) {
@@ -1042,14 +1043,14 @@ public class XfoObj {
      * @throws jp.co.antenna.XfoJavaCtl.XfoException
      */
     public void setBaseURI (String uri) {
-    String opt = "-base";
-    if (uri != null && !uri.equals("")) {
-        if (this.args.containsKey(opt))
-        this.args.remove(opt);
-        this.args.put(opt, uri);
-    } else {
-        this.args.remove(opt);
-    }
+	String opt = "-base";
+	if (uri != null && !uri.equals("")) {
+	    if (this.args.containsKey(opt))
+		this.args.remove(opt);
+	    this.args.put(opt, uri);
+	} else {
+	    this.args.remove(opt);
+	}
     }
 
     public void setBatchPrint (boolean bat) {
@@ -1155,20 +1156,20 @@ public class XfoObj {
         // Set the path...
         String opt = "-o";
         if (path != null && !path.equals("")) {
-        outputFilename = path;
+	    outputFilename = path;
             if (this.args.containsKey(opt)) {
                 this.args.remove(opt);
-        }
-        this.args.put(opt, path);
+	    }
+	    this.args.put(opt, path);
         }
         else {
-        outputFilename = "";
+	    outputFilename = "";
             this.args.remove(opt);
         }
     }
 
     public void setWorkingDir(File workDir) {
-    this.workingDir = workDir;
+	this.workingDir = workDir;
     }
 
     public void setFormatterType (int formatterType) {
@@ -1311,143 +1312,143 @@ public class XfoObj {
         if (this.args.containsKey(opt))
             this.args.remove(opt);
 
-    switch (newVal) {
-    case S_PDF_VERSION_13:
-        version = "PDF1.3";
-        break;
-    case S_PDF_VERSION_14:
-        version = "PDF1.4";
-        break;
-    case S_PDF_VERSION_15:
-        version = "PDF1.5";
-        break;
-    case S_PDF_VERSION_16:
-        version = "PDF1.6";
-        break;
-    case S_PDF_VERSION_17:
-        version = "PDF1.7";
-        break;
-    case S_PDF_VERSION_20:
-        version = "PDF2.0";
-        break;
+	switch (newVal) {
+	case S_PDF_VERSION_13:
+	    version = "PDF1.3";
+	    break;
+	case S_PDF_VERSION_14:
+	    version = "PDF1.4";
+	    break;
+	case S_PDF_VERSION_15:
+	    version = "PDF1.5";
+	    break;
+	case S_PDF_VERSION_16:
+	    version = "PDF1.6";
+	    break;
+	case S_PDF_VERSION_17:
+	    version = "PDF1.7";
+	    break;
+	case S_PDF_VERSION_20:
+	    version = "PDF2.0";
+	    break;
 
-    case S_PDF_VERSION_A_1a_2005:
-        version = "PDF/A-1a:2005";
-        break;
-    case S_PDF_VERSION_A_1b_2005:
-        version = "PDF/A-1b:2005";
-        break;
+	case S_PDF_VERSION_A_1a_2005:
+	    version = "PDF/A-1a:2005";
+	    break;
+	case S_PDF_VERSION_A_1b_2005:
+	    version = "PDF/A-1b:2005";
+	    break;
 
-    case S_PDF_VERSION_A_2a_2011_14:
-        version = "PDF1.4/A-2a:2011";
-        break;
-    case S_PDF_VERSION_A_2a_2011_15:
-        version = "PDF1.5/A-2a:2011";
-        break;
-    case S_PDF_VERSION_A_2a_2011_16:
-        version = "PDF1.6/A-2a:2011";
-        break;
-    case S_PDF_VERSION_A_2a_2011_17:
-        version = "PDF1.7/A-2a:2011";
-        break;
+	case S_PDF_VERSION_A_2a_2011_14:
+	    version = "PDF1.4/A-2a:2011";
+	    break;
+	case S_PDF_VERSION_A_2a_2011_15:
+	    version = "PDF1.5/A-2a:2011";
+	    break;
+	case S_PDF_VERSION_A_2a_2011_16:
+	    version = "PDF1.6/A-2a:2011";
+	    break;
+	case S_PDF_VERSION_A_2a_2011_17:
+	    version = "PDF1.7/A-2a:2011";
+	    break;
 
-    case S_PDF_VERSION_A_2b_2011_14:
-        version = "PDF1.4/A-2b:2011";
-        break;
-    case S_PDF_VERSION_A_2b_2011_15:
-        version = "PDF1.5/A-2b:2011";
-        break;
-    case S_PDF_VERSION_A_2b_2011_16:
-        version = "PDF1.6/A-2b:2011";
-        break;
-    case S_PDF_VERSION_A_2b_2011_17:
-        version = "PDF1.7/A-2b:2011";
-        break;
+	case S_PDF_VERSION_A_2b_2011_14:
+	    version = "PDF1.4/A-2b:2011";
+	    break;
+	case S_PDF_VERSION_A_2b_2011_15:
+	    version = "PDF1.5/A-2b:2011";
+	    break;
+	case S_PDF_VERSION_A_2b_2011_16:
+	    version = "PDF1.6/A-2b:2011";
+	    break;
+	case S_PDF_VERSION_A_2b_2011_17:
+	    version = "PDF1.7/A-2b:2011";
+	    break;
 
-    case S_PDF_VERSION_A_2u_2011_14:
-        version = "PDF1.4/A-2u:2011";
-        break;
-    case S_PDF_VERSION_A_2u_2011_15:
-        version = "PDF1.5/A-2u:2011";
-        break;
-    case S_PDF_VERSION_A_2u_2011_16:
-        version = "PDF1.6/A-2u:2011";
-        break;
-    case S_PDF_VERSION_A_2u_2011_17:
-        version = "PDF1.7/A-2u:2011";
-        break;
+	case S_PDF_VERSION_A_2u_2011_14:
+	    version = "PDF1.4/A-2u:2011";
+	    break;
+	case S_PDF_VERSION_A_2u_2011_15:
+	    version = "PDF1.5/A-2u:2011";
+	    break;
+	case S_PDF_VERSION_A_2u_2011_16:
+	    version = "PDF1.6/A-2u:2011";
+	    break;
+	case S_PDF_VERSION_A_2u_2011_17:
+	    version = "PDF1.7/A-2u:2011";
+	    break;
 
-    case S_PDF_VERSION_A_3a_2012_14:
-        version = "PDF1.4/A-3a:2012";
-        break;
-    case S_PDF_VERSION_A_3a_2012_15:
-        version = "PDF1.5/A-3a:2012";
-        break;
-    case S_PDF_VERSION_A_3a_2012_16:
-        version = "PDF1.6/A-3a:2012";
-        break;
-    case S_PDF_VERSION_A_3a_2012_17:
-        version = "PDF1.7/A-3a:2012";
-        break;
+	case S_PDF_VERSION_A_3a_2012_14:
+	    version = "PDF1.4/A-3a:2012";
+	    break;
+	case S_PDF_VERSION_A_3a_2012_15:
+	    version = "PDF1.5/A-3a:2012";
+	    break;
+	case S_PDF_VERSION_A_3a_2012_16:
+	    version = "PDF1.6/A-3a:2012";
+	    break;
+	case S_PDF_VERSION_A_3a_2012_17:
+	    version = "PDF1.7/A-3a:2012";
+	    break;
 
-    case S_PDF_VERSION_A_3b_2012_14:
-        version = "PDF1.4/A-3b:2012";
-        break;
-    case S_PDF_VERSION_A_3b_2012_15:
-        version = "PDF1.5/A-3b:2012";
-        break;
-    case S_PDF_VERSION_A_3b_2012_16:
-        version = "PDF1.6/A-3b:2012";
-        break;
-    case S_PDF_VERSION_A_3b_2012_17:
-        version = "PDF1.7/A-3b:2012";
-        break;
+	case S_PDF_VERSION_A_3b_2012_14:
+	    version = "PDF1.4/A-3b:2012";
+	    break;
+	case S_PDF_VERSION_A_3b_2012_15:
+	    version = "PDF1.5/A-3b:2012";
+	    break;
+	case S_PDF_VERSION_A_3b_2012_16:
+	    version = "PDF1.6/A-3b:2012";
+	    break;
+	case S_PDF_VERSION_A_3b_2012_17:
+	    version = "PDF1.7/A-3b:2012";
+	    break;
 
-    case S_PDF_VERSION_A_3u_2012_14:
-        version = "PDF1.4/A-3u:2012";
-        break;
-    case S_PDF_VERSION_A_3u_2012_15:
-        version = "PDF1.5/A-3u:2012";
-        break;
-    case S_PDF_VERSION_A_3u_2012_16:
-        version = "PDF1.6/A-3u:2012";
-        break;
-    case S_PDF_VERSION_A_3u_2012_17:
-        version = "PDF1.7/A-3u:2012";
-        break;
+	case S_PDF_VERSION_A_3u_2012_14:
+	    version = "PDF1.4/A-3u:2012";
+	    break;
+	case S_PDF_VERSION_A_3u_2012_15:
+	    version = "PDF1.5/A-3u:2012";
+	    break;
+	case S_PDF_VERSION_A_3u_2012_16:
+	    version = "PDF1.6/A-3u:2012";
+	    break;
+	case S_PDF_VERSION_A_3u_2012_17:
+	    version = "PDF1.7/A-3u:2012";
+	    break;
 
-    case S_PDF_VERSION_UA1_15:
-        version = "PDF1.5/UA-1:2014";
-        break;
-    case S_PDF_VERSION_UA1_16:
-        version = "PDF1.6/UA-1:2014";
-        break;
-    case S_PDF_VERSION_UA1_17:
-        version = "PDF1.7/UA-1:2014";
-        break;
+	case S_PDF_VERSION_UA1_15:
+	    version = "PDF1.5/UA-1:2014";
+	    break;
+	case S_PDF_VERSION_UA1_16:
+	    version = "PDF1.6/UA-1:2014";
+	    break;
+	case S_PDF_VERSION_UA1_17:
+	    version = "PDF1.7/UA-1:2014";
+	    break;
 
-    case S_PDF_VERSION_X_1a_2001:
-        version = "PDF/X-1a:2001";
-        break;
-    case S_PDF_VERSION_X_1a_2003:
-        version = "PDF/X-1a:2003";
-        break;
-    case S_PDF_VERSION_X_2_2003:
-        version = "PDF/X-2:2003";
-        break;
-    case S_PDF_VERSION_X_3_2002:
-        version = "PDF/X-3:2002";
-        break;
-    case S_PDF_VERSION_X_3_2003:
-        version = "PDF/X-3:2003";
-        break;
-    case S_PDF_VERSION_X_4_2010:  //  includes S_PDF_VERSION_X_4_2008 compat
-        version = "PDF/X-4:2010";
-        break;
+	case S_PDF_VERSION_X_1a_2001:
+	    version = "PDF/X-1a:2001";
+	    break;
+	case S_PDF_VERSION_X_1a_2003:
+	    version = "PDF/X-1a:2003";
+	    break;
+	case S_PDF_VERSION_X_2_2003:
+	    version = "PDF/X-2:2003";
+	    break;
+	case S_PDF_VERSION_X_3_2002:
+	    version = "PDF/X-3:2002";
+	    break;
+	case S_PDF_VERSION_X_3_2003:
+	    version = "PDF/X-3:2003";
+	    break;
+	case S_PDF_VERSION_X_4_2010:  //  includes S_PDF_VERSION_X_4_2008 compat
+	    version = "PDF/X-4:2010";
+	    break;
 
-    case S_PDF_VERSION_X_4p_2010:
-        version = "PDF/X-4p:2010";
-        break;
+	case S_PDF_VERSION_X_4p_2010:
+	    version = "PDF/X-4p:2010";
+	    break;
         }
 
         if (version != null)
@@ -1604,30 +1605,30 @@ class StreamCopyThread extends Thread {
     private OutputStream outStream;
 
     public StreamCopyThread (InputStream inStream, OutputStream outStream) {
-    this.inStream = inStream;
-    this.outStream = outStream;
+	this.inStream = inStream;
+	this.outStream = outStream;
     }
 
     @Override
     public void run () {
-    try {
-        int COUNT = 1024;
-        byte[] buff = new byte[COUNT];
-        int len;
-        while ((len = this.inStream.read(buff, 0, COUNT)) != -1) {
-        this.outStream.write(buff, 0, len);
-        }
-    } catch (Exception e) {
-        System.err.println("Exception copying streams: " + e.getMessage());
-        e.printStackTrace();
-    } finally {
-        try {inStream.close();} catch (Exception e) {
-        System.err.println("Exception closing input stream: " + e.getMessage());
-        }
-        try {outStream.close();} catch (Exception e) {
-        System.err.println("Exception closing output stream: " + e.getMessage());
-        }
-    }
+	try {
+	    int COUNT = 1024;
+	    byte[] buff = new byte[COUNT];
+	    int len;
+	    while ((len = this.inStream.read(buff, 0, COUNT)) != -1) {
+		this.outStream.write(buff, 0, len);
+	    }
+	} catch (Exception e) {
+	    System.err.println("Exception copying streams: " + e.getMessage());
+	    e.printStackTrace();
+	} finally {
+	    try {inStream.close();} catch (Exception e) {
+		System.err.println("Exception closing input stream: " + e.getMessage());
+	    }
+	    try {outStream.close();} catch (Exception e) {
+		System.err.println("Exception closing output stream: " + e.getMessage());
+	    }
+	}
     }
 }
 
@@ -1635,20 +1636,20 @@ class StreamFlusher extends Thread {
     private InputStream stream;
 
     public StreamFlusher (InputStream stream) {
-    this.stream = stream;
+	this.stream = stream;
     }
 
     @Override
     public void run () {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-    try {
-        String line = reader.readLine();
-        while (line != null) {
-        line = reader.readLine();
-        }
-    } catch (IOException e) {
-        System.err.println("IOException flushing stream: " + e.getMessage());
-    }
+	BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+	try {
+	    String line = reader.readLine();
+	    while (line != null) {
+		line = reader.readLine();
+	    }
+	} catch (IOException e) {
+	    System.err.println("IOException flushing stream: " + e.getMessage());
+	}
     }
 }
 
@@ -1672,48 +1673,48 @@ class ErrorParser extends Thread {
     @Override
     public void run () {
         try {
-        boolean errorParsed = false;
+	    boolean errorParsed = false;
             BufferedReader reader = new BufferedReader(new InputStreamReader(this.ErrorStream));
             String line = reader.readLine();
-        String fullMessage;
+	    String fullMessage;
 
-        //System.err.println(line);
-        fullMessage = line + "\n";
+	    //System.err.println(line);
+	    fullMessage = line + "\n";
 
             while (line != null) {
-        // check for version
-        // AHFCmd : AH Formatter V6.2 MR1 for Linux : 6.2.3.16772 (2014/04/30 10:59JST)
-        // can also be of the form:
-        // AHFCmd : AH XSL Formatter V6.0 MR7 for Windows : 6.0.8.9416 (2013/02/26 10:36JST)
-        // can't depend on the version token being at a split word
-        // position
+		// check for version
+		// AHFCmd : AH Formatter V6.2 MR1 for Linux : 6.2.3.16772 (2014/04/30 10:59JST)
+		// can also be of the form:
+		// AHFCmd : AH XSL Formatter V6.0 MR7 for Windows : 6.0.8.9416 (2013/02/26 10:36JST)
+		// can't depend on the version token being at a split word
+		// position
 
-        if (revision.equals("")  &&
-            (line.startsWith("XSLCmd : XSL ")  ||  line.startsWith("AHFCmd : AH "))) {
-            String[] words = line.split(" ");
+		if (revision.equals("")  &&
+		    (line.startsWith("XSLCmd : XSL ")  ||  line.startsWith("AHFCmd : AH "))) {
+		    String[] words = line.split(" ");
 
-            for (int i = 0;  i < words.length - 1;  i++) {
-            String word = words[i];
-            if (word.length() > 3  &&  word.charAt(0) == 'V' &&  Character.isDigit(word.charAt(1))) {
-                // possibly got the version string
-                String[] vs = word.substring(1).split("\\.");
-                if (vs.length < 2) {
-                System.err.println("axfo: couldn't get version string");
-                } else {
-                try {
-                    majorVersion = Integer.parseInt(vs[0]);
-                    minorVersion = Integer.parseInt(vs[1]);
-                    revision = words[i + 1];
-                    //System.out.println("Formatter version: " + majorVersion + " " + minorVersion);
-                } catch (NumberFormatException e) {
-                    System.err.println("axfo: couldn't parse version " + vs[0] + " " + vs[1]);
-                }
-                }
-            }
-            }
-        }
+		    for (int i = 0;  i < words.length - 1;  i++) {
+			String word = words[i];
+			if (word.length() > 3  &&  word.charAt(0) == 'V' &&  Character.isDigit(word.charAt(1))) {
+			    // possibly got the version string
+			    String[] vs = word.substring(1).split("\\.");
+			    if (vs.length < 2) {
+				System.err.println("axfo: couldn't get version string");
+			    } else {
+				try {
+				    majorVersion = Integer.parseInt(vs[0]);
+				    minorVersion = Integer.parseInt(vs[1]);
+				    revision = words[i + 1];
+				    //System.out.println("Formatter version: " + majorVersion + " " + minorVersion);
+				} catch (NumberFormatException e) {
+				    System.err.println("axfo: couldn't parse version " + vs[0] + " " + vs[1]);
+				}
+			    }
+			}
+		    }
+		}
 
-        if (line.startsWith("XSLCmd :") || line.startsWith("AHFCmd :")) {
+		if (line.startsWith("XSLCmd :") || line.startsWith("AHFCmd :")) {
                     if (line.contains("Error Level")) {
                         try {
                             int ErrorLevel = Integer.parseInt(line.substring(line.length() - 1, line.length()));
@@ -1729,61 +1730,61 @@ class ErrorParser extends Thread {
                             this.LastErrorLevel = ErrorLevel;
                             this.LastErrorCode = ErrorCode;
                             this.LastErrorMessage = ErrorMessage;
-                if (this.listener != null)
-                this.listener.onMessage(ErrorLevel, ErrorCode, ErrorMessage);
-                errorParsed = true;
+			    if (this.listener != null)
+				this.listener.onMessage(ErrorLevel, ErrorCode, ErrorMessage);
+			    errorParsed = true;
                         } catch (Exception e) {
-                System.err.println("Exception in error parser: " + e.getMessage());
-                //FIXME throw exception?
-            }
+			    System.err.println("Exception in error parser: " + e.getMessage());
+			    //FIXME throw exception?
+			}
                     }
                 } else if (line.startsWith("Invalid license.")) {
-            int ErrorLevel = 4;
-            //FIXME what version is this error code from
-            int ErrorCode = 24579;
-            String ErrorMessage = line
-            + "\n" + reader.readLine()
-            + "\n" + reader.readLine();
-            this.LastErrorLevel = ErrorLevel;
-            this.LastErrorCode = ErrorCode;
-            this.LastErrorMessage = ErrorMessage;
-            if (this.listener != null)
-            this.listener.onMessage(ErrorLevel, ErrorCode, ErrorMessage);
-            errorParsed = true;
+		    int ErrorLevel = 4;
+		    //FIXME what version is this error code from
+		    int ErrorCode = 24579;
+		    String ErrorMessage = line
+			+ "\n" + reader.readLine()
+			+ "\n" + reader.readLine();
+		    this.LastErrorLevel = ErrorLevel;
+		    this.LastErrorCode = ErrorCode;
+		    this.LastErrorMessage = ErrorMessage;
+		    if (this.listener != null)
+			this.listener.onMessage(ErrorLevel, ErrorCode, ErrorMessage);
+		    errorParsed = true;
 
                 } else if (line.startsWith("Evaluation license is expired:")) {
-            int ErrorLevel = 4;
-            int ErrorCode = 24591;
-            String ErrorMessage = line;
-            this.LastErrorLevel = ErrorLevel;
-            this.LastErrorCode = ErrorCode;
-            this.LastErrorMessage = ErrorMessage;
-            if (this.listener != null)
-            this.listener.onMessage(ErrorLevel, ErrorCode, ErrorMessage);
-            errorParsed = true;
-        } else {
-            // unknown error
-            UnknownErrorMessage += line + "\n";
-        }
+		    int ErrorLevel = 4;
+		    int ErrorCode = 24591;
+		    String ErrorMessage = line;
+		    this.LastErrorLevel = ErrorLevel;
+		    this.LastErrorCode = ErrorCode;
+		    this.LastErrorMessage = ErrorMessage;
+		    if (this.listener != null)
+			this.listener.onMessage(ErrorLevel, ErrorCode, ErrorMessage);
+		    errorParsed = true;
+		} else {
+		    // unknown error
+		    UnknownErrorMessage += line + "\n";
+		}
 
                 line = reader.readLine();
-        if (line != null) {
-            fullMessage += line + "\n";
-        } else {
+		if (line != null) {
+		    fullMessage += line + "\n";
+		} else {
 
-        }
+		}
             }
 
-        if (!errorParsed) {
-        this.LastErrorCode = 0;
-        this.LastErrorMessage = fullMessage;
-        if (this.listener != null) {
-            //this.listener.onMessage(-1, -1, this.LastErrorMessage);
-        }
-        }
+	    if (!errorParsed) {
+		this.LastErrorCode = 0;
+		this.LastErrorMessage = fullMessage;
+		if (this.listener != null) {
+		    //this.listener.onMessage(-1, -1, this.LastErrorMessage);
+		}
+	    }
         } catch (Exception e) {
-        System.err.println("Exception in error parsing thread: " + e.getMessage());
-        //FIXME throw exception
-    }
+	    System.err.println("Exception in error parsing thread: " + e.getMessage());
+	    //FIXME throw exception
+	}
     }
 }
