@@ -172,6 +172,14 @@ public class XfoObj {
 
     // Methods
 
+    // https://github.com/AntennaHouse/Alternate-XfoJavaCtl/issues/12
+    //
+    // Only use ProcessBuilder not Runtime.exec() since Runtime.exec() can
+    // clear environment variables.  That will lead to permission problems
+    // if C:\Windows is used as a temporary directory for EPS processing.
+    // It will also discard other variables that might be used by Formatter
+    // (ex: HTTP_PROXY, SSL_CERT_FILE).
+
     private ProcessBuilder initProcessBuilder(String[] cmdParams, String[] envParams) {
 
         ProcessBuilder pb = new ProcessBuilder(cmdParams);
