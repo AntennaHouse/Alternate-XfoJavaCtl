@@ -440,8 +440,8 @@ public class XfoObj {
 		InputStream StdErr = process.getErrorStream();
 		errorParser = new ErrorParser(StdErr, this.messageListener);
 		errorParser.start();
-		(new StreamCopyThread(process.getInputStream(), dst)).start();
-		(new StreamCopyThread(src, process.getOutputStream())).start();
+		(new StreamCopyThread(process.getInputStream(), dst, false)).start();
+		(new StreamCopyThread(src, process.getOutputStream(), true)).start();
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
@@ -989,10 +989,12 @@ public class XfoObj {
 class StreamCopyThread extends Thread {
     private InputStream inStream;
     private OutputStream outStream;
+    private boolean isProcessStdin;
 
-    public StreamCopyThread (InputStream inStream, OutputStream outStream) {
+    public StreamCopyThread (InputStream inStream, OutputStream outStream, boolean isProcessStdin) {
 	this.inStream = inStream;
 	this.outStream = outStream;
+	this.isProcessStdin = isProcessStdin;
     }
 
     @Override
@@ -1007,8 +1009,16 @@ class StreamCopyThread extends Thread {
 	} catch (Exception e) {
 	    e.printStackTrace();
 	} finally {
-	    try {inStream.close();} catch (Exception e) {}
-	    try {outStream.close();} catch (Exception e) {}
+	    try {
+		if (isProcessStdin) {
+		    outStream.close();
+		} else {
+		    inStream.close();
+		}
+	    } catch (Exception e) {
+		System.err.println("error closing process stream, stdin: " + isProcessStdin);
+		e.printStackTrace();
+	    }
 	}
     }
 }
