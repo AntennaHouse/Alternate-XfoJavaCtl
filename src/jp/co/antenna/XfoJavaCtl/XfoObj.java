@@ -435,17 +435,24 @@ public class XfoObj {
 	    }
 
 	    process = pb.start();
+	    StreamCopyThread toStdin = null;
+	    StreamCopyThread fromStdout = null;
 
 	    try {
 		InputStream StdErr = process.getErrorStream();
 		errorParser = new ErrorParser(StdErr, this.messageListener);
 		errorParser.start();
-		(new StreamCopyThread(process.getInputStream(), dst, false)).start();
-		(new StreamCopyThread(src, process.getOutputStream(), true)).start();
+		fromStdout = new StreamCopyThread(process.getInputStream(), dst, false);
+		fromStdout.start();
+		toStdin = new StreamCopyThread(src, process.getOutputStream(), true);
+		toStdin.start();
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
 	    exitCode = process.waitFor();
+	    // wait for copy stream threads to finish
+	    toStdin.join();
+	    fromStdout.join();
 	    errorParser.join();
 	} catch (Exception e) {
 	    e.printStackTrace();
