@@ -276,6 +276,13 @@ public class XfoObj {
 	    pb = new ProcessBuilder(cmdArray.toArray(s));
 	    Map<String, String> env = pb.environment();
 
+	    // 2021-04-28 don't use HTTP(S)_PROXY settings
+	    for (String key : (new HashMap<String, String>(env)).keySet()) {
+		if (key.toLowerCase().equals("http_proxy")  ||  key.toLowerCase().equals("https_proxy")) {
+		    env.remove(key);
+		}
+	    }
+
 	    if (preferredHome != null) {
 		if (isWindows) {
 		    String path = env.get("Path");
@@ -404,6 +411,13 @@ public class XfoObj {
 
 	    pb = new ProcessBuilder(cmdArray.toArray(s));
 	    Map<String, String> env = pb.environment();
+
+	    // 2021-04-28 don't use HTTP(S)_PROXY settings
+	    for (String key : (new HashMap<String, String>(env)).keySet()) {
+		if (key.toLowerCase().equals("http_proxy")  ||  key.toLowerCase().equals("https_proxy")) {
+		    env.remove(key);
+		}
+	    }
 
 	    if (preferredHome != null) {
 		if (isWindows) {
