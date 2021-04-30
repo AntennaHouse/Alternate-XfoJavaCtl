@@ -661,9 +661,9 @@ public class XfoObj {
         }
 
         ProcessBuilder pb;
-        ErrorParser errorParser = null;
-        StreamFlusher outputFlush = null;
-        StreamCopyThread outputFileFlush = null;
+        ErrorParserThread errorParserThread = null;
+        StreamFlusherThread outputFlushThread = null;
+        ProcessStreamCopyThread outputFileFlushThread = null;
 	FileOutputStream outputFileFlushStream = null;
 
         int exitCode = -1;
@@ -693,15 +693,15 @@ public class XfoObj {
 	    try {
 		InputStream StdErr = process.getErrorStream();
 		InputStream StdOut = process.getInputStream();
-		errorParser = new ErrorParser(StdErr, this.messageListener);
-		errorParser.start();
+		errorParserThread = new ErrorParserThread(StdErr, this.messageListener);
+		errorParserThread.start();
 		if (useStdoutFix) {
 		    outputFileFlushStream = new FileOutputStream(new File(outputFilename));
-		    outputFileFlush = new StreamCopyThread(StdOut, outputFileFlushStream, false);
-		    outputFileFlush.start();
+		    outputFileFlushThread = new ProcessStreamCopyThread(StdOut, outputFileFlushStream, false);
+		    outputFileFlushThread.start();
 		} else {
-		    outputFlush = new StreamFlusher(StdOut);
-		    outputFlush.start();
+		    outputFlushThread = new StreamFlusherThread(StdOut);
+		    outputFlushThread.start();
 		}
 	    } catch (Exception e) {
 		String msg = "Exception getting streams: " + e.getMessage();
@@ -720,13 +720,13 @@ public class XfoObj {
 	    try {
 		exitCode = process.waitFor();
 		// wait for copy stream threads to finish
-		if (outputFlush != null) {
-		    outputFlush.join();
-		    outputFlush = null;
+		if (outputFlushThread != null) {
+		    outputFlushThread.join();
+		    outputFlushThread = null;
 		}
-		if (outputFileFlush != null) {
-		    outputFileFlush.join();
-		    outputFileFlush = null;
+		if (outputFileFlushThread != null) {
+		    outputFileFlushThread.join();
+		    outputFileFlushThread = null;
 		}
 		// error parser thread joined() later
 		process = null;
@@ -738,18 +738,18 @@ public class XfoObj {
 		    process.destroy();
 		    process.waitFor();
 		    process = null;
-		    if (outputFlush != null) {
-			outputFlush.interrupt();
-			outputFlush.join();
+		    if (outputFlushThread != null) {
+			outputFlushThread.interrupt();
+			outputFlushThread.join();
 			//System.out.println("interrupting flush thread");
 		    }
-		    if (outputFileFlush != null) {
-			outputFileFlush.interrupt();
-			outputFileFlush.join();
+		    if (outputFileFlushThread != null) {
+			outputFileFlushThread.interrupt();
+			outputFileFlushThread.join();
 		    }
-		    if (errorParser != null) {
-			errorParser.interrupt();
-			errorParser.join();
+		    if (errorParserThread != null) {
+			errorParserThread.interrupt();
+			errorParserThread.join();
 			//System.out.println("interrupting error parsing thread");
 		    }
 
@@ -780,9 +780,9 @@ public class XfoObj {
 
 	}
 
-	if (outputFileFlush != null) {
+	if (outputFileFlushThread != null) {
 	    try {
-		outputFileFlush.join();
+		outputFileFlushThread.join();
 	    } catch (InterruptedException e) {
 		String msg = "Exception output file flush: " + e.getMessage();
 		System.err.println(msg);
@@ -792,9 +792,9 @@ public class XfoObj {
 	    }
 	}
 
-	if (outputFlush != null) {
+	if (outputFlushThread != null) {
 	    try {
-		outputFlush.join();
+		outputFlushThread.join();
 	    } catch (InterruptedException e) {
 		String msg = "Exception output flush: " + e.getMessage();
 		System.err.println(msg);
@@ -813,12 +813,12 @@ public class XfoObj {
 	    }
 	}
 
-	if (errorParser != null) {
+	if (errorParserThread != null) {
 	    try {
-		errorParser.join();
-		formatterMajorVersion = errorParser.majorVersion;
-		formatterMinorVersion = errorParser.minorVersion;
-		formatterRevision = errorParser.revision;
+		errorParserThread.join();
+		formatterMajorVersion = errorParserThread.majorVersion;
+		formatterMinorVersion = errorParserThread.minorVersion;
+		formatterRevision = errorParserThread.revision;
 	    } catch (InterruptedException e) {
 		String msg = "Exception joining error parser: " + e.getMessage();
 		System.err.println(msg);
@@ -829,11 +829,11 @@ public class XfoObj {
 	}
 
         if (exitCode != 0) {
-            if (errorParser != null && errorParser.LastErrorCode != 0) {
-                this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
+            if (errorParserThread != null && errorParserThread.LastErrorCode != 0) {
+                this.lastError = new XfoException(errorParserThread.LastErrorLevel, errorParserThread.LastErrorCode, errorParserThread.LastErrorMessage);
 		throw this.lastError;
             } else {
-                throw new XfoException(4, 0, "Axfo Exit code: " + exitCode + " last message: " + errorParser.UnknownErrorMessage);
+                throw new XfoException(4, 0, "Axfo Exit code: " + exitCode + " last message: " + errorParserThread.UnknownErrorMessage);
             }
         }
     }
@@ -906,9 +906,9 @@ public class XfoObj {
 	}
 
 	ProcessBuilder pb;
-	ErrorParser errorParser = null;
-	StreamCopyThread scInput = null;
-	StreamCopyThread scOutput = null;
+	ErrorParserThread errorParserThread = null;
+	ProcessStreamCopyThread scInputThread = null;
+	ProcessStreamCopyThread scOutputThread = null;
 
 	int exitCode = -1;
 
@@ -935,13 +935,13 @@ public class XfoObj {
 
 	    try {
 		InputStream StdErr = process.getErrorStream();
-		errorParser = new ErrorParser(StdErr, this.messageListener);
-		errorParser.start();
+		errorParserThread = new ErrorParserThread(StdErr, this.messageListener);
+		errorParserThread.start();
 
-		scInput = new StreamCopyThread(process.getInputStream(), dst, false);
-		scInput.start();
-		scOutput = new StreamCopyThread(src, process.getOutputStream(), true);
-		scOutput.start();
+		scInputThread = new ProcessStreamCopyThread(process.getInputStream(), dst, false);
+		scInputThread.start();
+		scOutputThread = new ProcessStreamCopyThread(src, process.getOutputStream(), true);
+		scOutputThread.start();
 	    } catch (Exception e) {
 		String msg = "Exception creating threads in render(): " + e.getMessage();
 		System.err.println(msg);
@@ -957,9 +957,9 @@ public class XfoObj {
 	    throw new XfoException(4, 0, msg);
 	}
 
-	if (scInput != null) {
+	if (scInputThread != null) {
 	    try {
-		scInput.join();
+		scInputThread.join();
 	    } catch (InterruptedException e) {
 		String msg = "Exception joining render input: " + e.getMessage();
 		System.err.println(msg);
@@ -969,9 +969,9 @@ public class XfoObj {
 	    }
 	}
 
-	if (scOutput != null) {
+	if (scOutputThread != null) {
 	    try {
-		scOutput.join();
+		scOutputThread.join();
 	    } catch (InterruptedException e) {
 		String msg = "Exception joining render output: " + e.getMessage();
 		System.err.println(msg);
@@ -981,12 +981,12 @@ public class XfoObj {
 	    }
 	}
 
-	if (errorParser != null) {
+	if (errorParserThread != null) {
 	    try {
-		errorParser.join();
-		formatterMajorVersion = errorParser.majorVersion;
-		formatterMinorVersion = errorParser.minorVersion;
-		formatterRevision = errorParser.revision;
+		errorParserThread.join();
+		formatterMajorVersion = errorParserThread.majorVersion;
+		formatterMinorVersion = errorParserThread.minorVersion;
+		formatterRevision = errorParserThread.revision;
 	    } catch (InterruptedException e) {
 		String msg = "Exception joining error parser: " + e.getMessage();
 		System.err.println(msg);
@@ -997,11 +997,11 @@ public class XfoObj {
 	}
 
 	if (exitCode != 0) {
-	    if (errorParser != null && errorParser.LastErrorCode != 0) {
-		this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
+	    if (errorParserThread != null && errorParserThread.LastErrorCode != 0) {
+		this.lastError = new XfoException(errorParserThread.LastErrorLevel, errorParserThread.LastErrorCode, errorParserThread.LastErrorMessage);
 		throw this.lastError;
 	    } else {
-		throw new XfoException(4, 0, "Exit code: " + exitCode + " render 2 last message: " + errorParser.UnknownErrorMessage);
+		throw new XfoException(4, 0, "Exit code: " + exitCode + " render 2 last message: " + errorParserThread.UnknownErrorMessage);
 	    }
 	}
     }
@@ -1606,12 +1606,12 @@ public class XfoObj {
     */
 }
 
-class StreamCopyThread extends Thread {
+class ProcessStreamCopyThread extends Thread {
     private InputStream inStream;
     private OutputStream outStream;
     private boolean isProcessStdin;
 
-    public StreamCopyThread (InputStream inStream, OutputStream outStream, boolean isProcessStdin) {
+    public ProcessStreamCopyThread (InputStream inStream, OutputStream outStream, boolean isProcessStdin) {
 	this.inStream = inStream;
 	this.outStream = outStream;
 	this.isProcessStdin = isProcessStdin;
@@ -1644,10 +1644,10 @@ class StreamCopyThread extends Thread {
     }
 }
 
-class StreamFlusher extends Thread {
+class StreamFlusherThread extends Thread {
     private InputStream stream;
 
-    public StreamFlusher (InputStream stream) {
+    public StreamFlusherThread (InputStream stream) {
 	this.stream = stream;
     }
 
@@ -1665,7 +1665,7 @@ class StreamFlusher extends Thread {
     }
 }
 
-class ErrorParser extends Thread {
+class ErrorParserThread extends Thread {
     private InputStream ErrorStream;
     private MessageListener listener;
     public int LastErrorLevel;
@@ -1677,7 +1677,7 @@ class ErrorParser extends Thread {
     public int minorVersion = 0;
     public String revision = "";  // ex:  r1, mr9, etc.
 
-    public ErrorParser (InputStream ErrorStream, MessageListener listener) {
+    public ErrorParserThread (InputStream ErrorStream, MessageListener listener) {
         this.ErrorStream = ErrorStream;
         this.listener = listener;
     }
