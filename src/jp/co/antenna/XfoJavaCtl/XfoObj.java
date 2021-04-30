@@ -718,6 +718,16 @@ public class XfoObj {
 
 	    try {
 		exitCode = process.waitFor();
+		// wait for copy stream threads to finish
+		if (outputFlush != null) {
+		    outputFlush.join();
+		    outputFlush = null;
+		}
+		if (outputFileFlush != null) {
+		    outputFileFlush.join();
+		    outputFileFlush = null;
+		}
+		// error parser thread joined() later
 		process = null;
 	    } catch (InterruptedException e) {
 		String msg = "InterruptedException waiting for axfo to finish: " + e.getMessage();
