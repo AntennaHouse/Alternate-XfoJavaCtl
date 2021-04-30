@@ -270,7 +270,7 @@ public class XfoObj {
 
 	ProcessBuilder pb;
         Process process;
-        ErrorParser errorParser = null;
+        ErrorParserThread errorParserThread = null;
         int exitCode = -1;
         try {
 	    String[] s = new String[0];
@@ -309,21 +309,21 @@ public class XfoObj {
 	    process = pb.start();
 	    try {
 		InputStream StdErr = process.getErrorStream();
-		errorParser = new ErrorParser(StdErr, this.messageListener);
-		errorParser.start();
+		errorParserThread = new ErrorParserThread(StdErr, this.messageListener);
+		errorParserThread.start();
 	    } catch (Exception e) {}
             exitCode = process.waitFor();
-	    errorParser.join();
+	    errorParserThread.join();
         } catch (Exception e) {
 	    e.printStackTrace();
 	}
 
         if (exitCode != 0) {
-            if (errorParser != null && errorParser.LastErrorCode != 0) {
-                this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
+            if (errorParserThread != null && errorParserThread.LastErrorCode != 0) {
+                this.lastError = new XfoException(errorParserThread.LastErrorLevel, errorParserThread.LastErrorCode, errorParserThread.LastErrorMessage);
 		throw this.lastError;
             } else {
-                throw new XfoException(4, 0, "Failed to parse last error. Exit code: " + exitCode + ". " + errorParser.UnknownErrorMessage);
+                throw new XfoException(4, 0, "Failed to parse last error. Exit code: " + exitCode + ". " + errorParserThread.UnknownErrorMessage);
             }
         }
     }
@@ -397,7 +397,7 @@ public class XfoObj {
 
 	ProcessBuilder pb;
 	Process process;
-	ErrorParser errorParser = null;
+	ErrorParserThread errorParserThread = null;
 	int exitCode = -1;
 
 	try {
@@ -436,35 +436,35 @@ public class XfoObj {
 	    }
 
 	    process = pb.start();
-	    StreamCopyThread toStdin = null;
-	    StreamCopyThread fromStdout = null;
+	    ProcessStreamCopyThread toStdinThread = null;
+	    ProcessStreamCopyThread fromStdoutThread = null;
 
 	    try {
 		InputStream StdErr = process.getErrorStream();
-		errorParser = new ErrorParser(StdErr, this.messageListener);
-		errorParser.start();
-		fromStdout = new StreamCopyThread(process.getInputStream(), dst, false);
-		fromStdout.start();
-		toStdin = new StreamCopyThread(src, process.getOutputStream(), true);
-		toStdin.start();
+		errorParserThread = new ErrorParserThread(StdErr, this.messageListener);
+		errorParserThread.start();
+		fromStdoutThread = new ProcessStreamCopyThread(process.getInputStream(), dst, false);
+		fromStdoutThread.start();
+		toStdinThread = new ProcessStreamCopyThread(src, process.getOutputStream(), true);
+		toStdinThread.start();
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
 	    exitCode = process.waitFor();
 	    // wait for copy stream threads to finish
-	    toStdin.join();
-	    fromStdout.join();
-	    errorParser.join();
+	    toStdinThread.join();
+	    fromStdoutThread.join();
+	    errorParserThread.join();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
 
 	if (exitCode != 0) {
-	    if (errorParser != null && errorParser.LastErrorCode != 0) {
-		this.lastError = new XfoException(errorParser.LastErrorLevel, errorParser.LastErrorCode, errorParser.LastErrorMessage);
+	    if (errorParserThread != null && errorParserThread.LastErrorCode != 0) {
+		this.lastError = new XfoException(errorParserThread.LastErrorLevel, errorParserThread.LastErrorCode, errorParserThread.LastErrorMessage);
 		throw this.lastError;
 	    } else {
-		throw new XfoException(4, 0, "Failed to parse last error. Exit code: " + exitCode + ". " + errorParser.UnknownErrorMessage);
+		throw new XfoException(4, 0, "Failed to parse last error. Exit code: " + exitCode + ". " + errorParserThread.UnknownErrorMessage);
 	    }
 	}
     }
@@ -994,12 +994,12 @@ public class XfoObj {
 
 }
 
-class StreamCopyThread extends Thread {
+class ProcessStreamCopyThread extends Thread {
     private InputStream inStream;
     private OutputStream outStream;
     private boolean isProcessStdin;
 
-    public StreamCopyThread (InputStream inStream, OutputStream outStream, boolean isProcessStdin) {
+    public ProcessStreamCopyThread (InputStream inStream, OutputStream outStream, boolean isProcessStdin) {
 	this.inStream = inStream;
 	this.outStream = outStream;
 	this.isProcessStdin = isProcessStdin;
@@ -1031,7 +1031,7 @@ class StreamCopyThread extends Thread {
     }
 }
 
-class ErrorParser extends Thread {
+class ErrorParserThread extends Thread {
     private InputStream ErrorStream;
     private MessageListener listener;
     public int LastErrorLevel;
@@ -1039,7 +1039,7 @@ class ErrorParser extends Thread {
     public String LastErrorMessage;
     public String UnknownErrorMessage = "";
 
-    public ErrorParser (InputStream ErrorStream, MessageListener listener) {
+    public ErrorParserThread (InputStream ErrorStream, MessageListener listener) {
         this.ErrorStream = ErrorStream;
         this.listener = listener;
     }
