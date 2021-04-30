@@ -663,6 +663,8 @@ public class XfoObj {
         ErrorParser errorParser = null;
         StreamFlusher outputFlush = null;
         StreamCopyThread outputFileFlush = null;
+	FileOutputStream outputFileFlushStream = null;
+
         int exitCode = -1;
         try {
             String[] s = new String[0];
@@ -693,7 +695,8 @@ public class XfoObj {
 		errorParser = new ErrorParser(StdErr, this.messageListener);
 		errorParser.start();
 		if (useStdoutFix) {
-		    outputFileFlush = new StreamCopyThread(StdOut, new FileOutputStream(new File(outputFilename)));
+		    outputFileFlushStream = new FileOutputStream(new File(outputFilename));
+		    outputFileFlush = new StreamCopyThread(StdOut, outputFileFlushStream, false);
 		    outputFileFlush.start();
 		} else {
 		    outputFlush = new StreamFlusher(StdOut);
@@ -702,8 +705,17 @@ public class XfoObj {
 	    } catch (Exception e) {
 		String msg = "Exception getting streams: " + e.getMessage();
 		System.err.println(msg);
+		if (outputFileFlushStream != null) {
+		    try {
+			outputFileFlushStream.close();
+		    } catch (Exception ex) {
+			System.err.println("error closing output file flush stream");
+			ex.printStackTrace();
+		    }
+		}
 		throw new XfoException(4, 0, msg);
 	    }
+
 	    try {
 		exitCode = process.waitFor();
 		process = null;
@@ -729,6 +741,16 @@ public class XfoObj {
 			errorParser.join();
 			//System.out.println("interrupting error parsing thread");
 		    }
+
+		    if (outputFileFlushStream != null) {
+			try {
+			    outputFileFlushStream.close();
+			} catch (Exception ex) {
+			    System.err.println("error closing output file flush stream");
+			    ex.printStackTrace();
+			}
+		    }
+
 		    //System.out.println("killed ahfcmd process");
 		}
 		Thread.interrupted();
@@ -768,6 +790,15 @@ public class XfoObj {
 		Thread.interrupted();
 		throw new InterruptedException();
 		//throw new XfoException(4, 0, msg);
+	    }
+	}
+
+	if (outputFileFlushStream != null) {
+	    try {
+		outputFileFlushStream.close();
+	    } catch (Exception ex) {
+		System.err.println("error closing output file flush stream");
+		ex.printStackTrace();
 	    }
 	}
 
@@ -896,9 +927,9 @@ public class XfoObj {
 		errorParser = new ErrorParser(StdErr, this.messageListener);
 		errorParser.start();
 
-		scInput = new StreamCopyThread(process.getInputStream(), dst);
+		scInput = new StreamCopyThread(process.getInputStream(), dst, false);
 		scInput.start();
-		scOutput = new StreamCopyThread(src, process.getOutputStream());
+		scOutput = new StreamCopyThread(src, process.getOutputStream(), true);
 		scOutput.start();
 	    } catch (Exception e) {
 		String msg = "Exception creating threads in render(): " + e.getMessage();
@@ -1567,10 +1598,12 @@ public class XfoObj {
 class StreamCopyThread extends Thread {
     private InputStream inStream;
     private OutputStream outStream;
+    private boolean isProcessStdin;
 
-    public StreamCopyThread (InputStream inStream, OutputStream outStream) {
+    public StreamCopyThread (InputStream inStream, OutputStream outStream, boolean isProcessStdin) {
 	this.inStream = inStream;
 	this.outStream = outStream;
+	this.isProcessStdin = isProcessStdin;
     }
 
     @Override
@@ -1586,11 +1619,15 @@ class StreamCopyThread extends Thread {
 	    System.err.println("Exception copying streams: " + e.getMessage());
 	    e.printStackTrace();
 	} finally {
-	    try {inStream.close();} catch (Exception e) {
-		System.err.println("Exception closing input stream: " + e.getMessage());
-	    }
-	    try {outStream.close();} catch (Exception e) {
-		System.err.println("Exception closing output stream: " + e.getMessage());
+	    try {
+		if (isProcessStdin) {
+		    outStream.close();
+		} else {
+		    inStream.close();
+		}
+	    } catch (Exception e) {
+		System.err.println("error closing process stream, stdin: " + isProcessStdin);
+		e.printStackTrace();
 	    }
 	}
     }
