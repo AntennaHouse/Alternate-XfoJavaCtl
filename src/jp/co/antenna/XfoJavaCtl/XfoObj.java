@@ -356,7 +356,14 @@ public class XfoObj {
 	    // named like the 32-bit version (missing '_64', ex:
 	    // /usr/local/AHFormater64) but the environment variables use the
 	    // '_64' extension (ex:  AHF64_64_HOME).
-	    if (foundDirIs64Bit  ||  (os.contains("Mac OS X") &&  foundVersion >= 64)) {
+
+	    // 2021-12-15 Starting with Formatter version 7.2 the Linux
+	    // directory name no longer appends _64.  All unix versions of
+	    // Formatter 7.2 will be 64-bit.
+
+	    if (foundDirIs64Bit  ||
+		(os.contains("Mac OS X")  &&  foundVersion >= 64)  ||
+		foundVersion >= 72) {
 		envStart += "_64";
 	    }
 
