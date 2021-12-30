@@ -316,6 +316,12 @@ public class XfoObj {
 		    // pass, leave at zero
 		}
 
+		// x.0 version could be missing zero in directory name.  Ex:
+		//    /usr/AHFormatterV6_64
+		if (version < 10) {
+		    version *= 10;
+		}
+
 		if (version > foundVersion) {
 		    foundVersion = version;
 		    foundDir = f;
@@ -366,6 +372,8 @@ public class XfoObj {
 		foundVersion >= 72) {
 		envStart += "_64";
 	    }
+
+	    //System.out.println("found version: " + foundVersion);
 
 	    envp.add(envStart + "_HOME" + "=" + absPath);
 	    envp.add(envStart + "_LIC_PATH" + "=" + absPath + "/etc");
