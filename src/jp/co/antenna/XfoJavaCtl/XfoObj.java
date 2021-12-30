@@ -380,6 +380,15 @@ public class XfoObj {
 	    envp.add(envStart + "_DMC_TBLPATH" + "=" + absPath + "/sdata/base2");
 	    envp.add(envStart + "_DEFAULT_HTML_CSS" + "=" + absPath + "/etc/html.css");
 	    envp.add(envStart + "_FONT_CONFIGFILE" + "=" + absPath + "/etc/font-config.xml");
+	    if (foundVersion == 60) {
+		// Formatter 6.0 bug used wrong environment name for font
+		// config file.
+		if (foundDirIs64Bit) {
+		    envp.add("AHFS10_64_FONT_CONFIGFILE=" + absPath + "/etc/font-config.xml");
+		} else {
+		    envp.add("AHFS10_FONT_CONFIGFILE=" + absPath + "/etc/font-config.xml");
+		}
+	    }
 	    envp.add(envStart + "_BROKENIMG" + "=" + absPath + "/samples/Broken.png");
 
 	    boolean debugEnvironment = false;
