@@ -373,8 +373,6 @@ public class XfoObj {
 		envStart += "_64";
 	    }
 
-	    //System.out.println("found version: " + foundVersion);
-
 	    envp.add(envStart + "_HOME" + "=" + absPath);
 	    envp.add(envStart + "_LIC_PATH" + "=" + absPath + "/etc");
 	    envp.add(envStart + "_HYPDIC_PATH" + "=" + absPath + "/etc/hyphenation");
@@ -384,11 +382,13 @@ public class XfoObj {
 	    envp.add(envStart + "_FONT_CONFIGFILE" + "=" + absPath + "/etc/font-config.xml");
 	    envp.add(envStart + "_BROKENIMG" + "=" + absPath + "/samples/Broken.png");
 
-	    /*
-	    for (String s : envp) {
-	        System.out.println("env: " + s);
+	    boolean debugEnvironment = false;
+
+	    if (debugEnvironment) {
+		for (String s : envp) {
+		    System.out.println("env: " + s);
+		}
 	    }
-	    */
 	}
 
 	return foundDir;
