@@ -1719,14 +1719,19 @@ class ErrorParserThread extends Thread {
 
             while (line != null) {
 		// check for version
+		//
 		// AHFCmd : AH Formatter V6.2 MR1 for Linux : 6.2.3.16772 (2014/04/30 10:59JST)
 		// can also be of the form:
 		// AHFCmd : AH XSL Formatter V6.0 MR7 for Windows : 6.0.8.9416 (2013/02/26 10:36JST)
+		//
+		// Version 7.3 uses 'Antenna House' instead of 'AH':
+		// AHFCmd : Antenna House Formatter V7.3 MR1 Linux : 7.3.2.60453 (2023-03-06T13:41+09)
+		//
 		// can't depend on the version token being at a split word
 		// position
 
 		if (revision.equals("")  &&
-		    (line.startsWith("XSLCmd : XSL ")  ||  line.startsWith("AHFCmd : AH "))) {
+		    (line.startsWith("XSLCmd : XSL ")  ||  line.startsWith("AHFCmd : AH ")  ||  line.startsWith("AHFCmd : Antenna "))) {
 		    String[] words = line.split(" ");
 
 		    for (int i = 0;  i < words.length - 1;  i++) {
