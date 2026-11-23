@@ -23,6 +23,7 @@ public class XfoObj {
     public static final int EST_STDOUT = 1;
     public static final int EST_STDERR = 2;
     private static final String[] AH_HOME_ENV = {
+	"AHF76_64_HOME", "AHF76_32_HOME",
 	"AHF75_64_HOME", "AHF75_32_HOME",
 	"AHF74_64_HOME", "AHF74_32_HOME",
 	"AHF73_64_HOME", "AHF73_32_HOME",
